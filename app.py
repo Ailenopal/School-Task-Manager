@@ -85,56 +85,56 @@ def delete_task(task_id):
 
 # --- Main Application Function ---
 def main():
-    # --- Custom CSS Styling (Dark Mode Base, Adaptive Fonts) ---
+    # --- Custom CSS Styling (Light Mode Base) ---
     st.markdown("""
         <style>
-            /* Set a dark background color for the entire page */
+            /* Set a light background color for the entire page */
             /* Streamlit uses the .stApp class for the main container */
             .stApp {
-                background-color: #1f2937; /* Slate 800 */
+                background-color: #f0f2f6; /* Light Gray/Slate 100 */
             }
             
             /* Button styling remains fixed for accent color */
             .stButton>button {
                 width: 100%;
-                background-color: #6366f1; /* Indigo 500 */
+                background-color: #4f46e5; /* Indigo 600 */
                 color: white;
                 font-weight: bold;
                 border-radius: 0.5rem;
             }
             .stButton>button:hover {
-                background-color: #4f46e5; /* Indigo 600 */
+                background-color: #4338ca; /* Indigo 700 */
             }
             
-            /* Custom styling for the task list container (Incomplete: Slate 700, Complete: Slate 600) */
+            /* Custom styling for the task list container (Incomplete: White, Complete: Light Gray) */
             .task-card-incomplete {
-                border-left: 5px solid #6366f1; /* Lighter Purple Border */
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
-                background-color: #374151; /* Slate 700 */
+                border-left: 5px solid #4f46e5; /* Indigo Border */
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+                background-color: #ffffff; /* White card */
             }
             .task-card-complete {
-                border-left: 5px solid #34d399; /* Lighter Green Border */
+                border-left: 5px solid #10b981; /* Green Border */
                 opacity: 0.7; /* Fades the whole card when complete */
-                background-color: #4b5563; /* Slate 600 */
+                background-color: #f3f4f6; /* Very light gray card */
             }
             
-            /* Keep dark background for inputs but rely on default text color for adaptability */
+            /* Keep light background for inputs */
             .stTextInput>div>div>input, .stTextArea>div>div>textarea {
-                background-color: #4b5563; /* Slate 600 background */
+                background-color: #ffffff; /* White input background */
             }
-            /* Ensure the form/header containers have the desired dark background */
+            /* Ensure the form/header containers have the desired light background */
             .stContainer {
-                background-color: #374151; /* Slate 700 for main blocks */
-                border: none !important; /* Use border property on .task-card-incomplete/complete instead */
+                background-color: #ffffff; /* White for main blocks */
+                border: none !important; 
             }
         </style>
     """, unsafe_allow_html=True)
 
 
-    # --- Header (Text color removed, relies on Streamlit theme) ---
+    # --- Header (Updated for Light Mode) ---
     st.markdown(
         """
-        <div style="text-align: center; padding: 20px; background-color: #374151; border-radius: 1rem; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);">
+        <div style="text-align: center; padding: 20px; background-color: #ffffff; border-radius: 1rem; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
             <h1 style="font-size: 2.5rem; font-weight: 800;">📚 School Task Manager</h1>
             <p style="font-size: 0.875rem;">Tasks are saved for the current browser session only.</p>
         </div>
@@ -207,14 +207,14 @@ def main():
             custom_label = task.get('customDayLabel')
             display_text = f"{custom_label}, {formatted_date}" if custom_label else f"{due_day}, {formatted_date}"
             
-            # Conditional text styling using inline HTML/CSS (Removed hardcoded colors)
+            # Conditional text styling using inline HTML/CSS (Kept adaptive font logic)
             
             # For completed tasks, we just apply strikethrough and let the opacity of the card handle the fading.
             subject_style = 'text-decoration: line-through;' if task['isCompleted'] else 'font-weight: bold;'
             desc_style = 'text-decoration: line-through;' if task['isCompleted'] else ''
             
             # Badge color remains the same (Indigo/Green)
-            date_badge_bg = '#34d399' if task['isCompleted'] else '#6366f1'
+            date_badge_bg = '#10b981' if task['isCompleted'] else '#4f46e5'
 
             # Use st.container to create the card layout
             with st.container(border=True):
