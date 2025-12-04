@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>School Task Manager</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -41,18 +40,15 @@
             <p class="text-lg text-gray-500 mt-2">Manage your school tasks and deadlines.</p>
         </header>
 
-        <!-- User Info / Status -->
         <div class="mb-6 p-3 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
             <p class="text-sm font-medium text-gray-700">
                 Logged in as: <span id="user-id-display" class="font-mono text-xs bg-gray-100 p-1 rounded">Loading...</span>
             </p>
         </div>
 
-        <!-- Task Creation Form -->
         <div class="bg-white p-6 rounded-xl task-card mb-10">
             <h2 class="text-2xl font-semibold mb-4 text-gray-800">Add New Task</h2>
-            <form id="task-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="md:col-span-1">
+            <form id="task-form" class="grid grid-cols-1 md:grid-cols-6 gap-4"> <div class="md:col-span-2">
                     <label for="task-name" class="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
                     <input type="text" id="task-name" required placeholder="e.g., Math Homework"
                            class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none input-focus">
@@ -70,20 +66,28 @@
                         <option value="Other">Other</option>
                     </select>
                 </div>
-                <div class="md:col-span-1 flex items-end">
+                <div class="md:col-span-1">
+                    <label for="task-subject" class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                    <input type="text" id="task-subject" required placeholder="e.g., Algebra II"
+                           class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none input-focus">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="task-teacher" class="block text-sm font-medium text-gray-700 mb-1">Teacher</label>
+                    <input type="text" id="task-teacher" placeholder="e.g., Ms. Smith (Optional)"
+                           class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none input-focus">
+                </div>
+                <div class="md:col-span-6 flex justify-end">
                     <button type="submit" id="add-task-btn"
-                            class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out disabled:bg-blue-300">
+                            class="w-full md:w-auto py-2 px-6 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out disabled:bg-blue-300">
                         Add Task
                     </button>
                 </div>
             </form>
         </div>
 
-        <!-- Task List Sections -->
         <div id="loading-indicator" class="text-center text-gray-500 mt-10">Loading tasks...</div>
         <div id="error-message" class="hidden p-4 bg-red-100 text-red-700 border border-red-300 rounded-lg mb-6"></div>
 
-        <!-- Today/Tomorrow -->
         <section class="mb-8" id="section-upcoming">
             <h2 class="text-2xl font-bold text-gray-800 section-header flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,8 +99,9 @@
                 <p class="text-gray-500 col-span-full" data-empty-message>No tasks due today or tomorrow!</p>
             </div>
         </section>
+        
+        ---
 
-        <!-- Next 7 Days -->
         <section class="mb-8" id="section-next-week">
             <h2 class="text-2xl font-bold text-gray-800 section-header flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +114,8 @@
             </div>
         </section>
 
-        <!-- Later -->
+        ---
+
         <section class="mb-8" id="section-later">
             <h2 class="text-2xl font-bold text-gray-800 section-header flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -124,7 +130,6 @@
 
     </div>
 
-    <!-- Modal for Confirmation/Alert (Custom replacement for alert/confirm) -->
     <div id="custom-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center p-4 z-50">
         <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full">
             <h3 id="modal-title" class="text-xl font-semibold mb-4 text-gray-800">Confirm Deletion</h3>
@@ -140,11 +145,11 @@
         </div>
     </div>
 
-    <!-- Firebase Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // FIX: Added updateDoc to the import list
+        import { getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -160,6 +165,10 @@
         const taskNameInput = document.getElementById('task-name');
         const dueDateInput = document.getElementById('due-date');
         const taskTypeSelect = document.getElementById('task-type');
+        // New DOM elements
+        const taskSubjectInput = document.getElementById('task-subject');
+        const taskTeacherInput = document.getElementById('task-teacher');
+
         const addTaskBtn = document.getElementById('add-task-btn');
         const upcomingTasksContainer = document.getElementById('tasks-upcoming');
         const nextWeekTasksContainer = document.getElementById('tasks-next-week');
@@ -277,7 +286,7 @@
         async function toggleTask(taskId, completed) {
             try {
                 const docRef = doc(getTasksCollectionRef(), taskId);
-                await updateDoc(docRef, { completed: !completed });
+                await updateDoc(docRef, { completed: !completed }); // updateDoc is now imported and working
             } catch (e) {
                 handleError(e, 'Toggling Task Status');
             }
@@ -340,15 +349,20 @@
             // Clear containers and reset empty messages
             Object.values(containers).forEach(container => {
                 container.innerHTML = '';
-                // Add back empty message placeholder
+                // Add back empty message placeholder (find a better way to handle this in a production env)
                 const emptyMsg = document.createElement('p');
                 emptyMsg.className = 'text-gray-500 col-span-full hidden';
                 emptyMsg.setAttribute('data-empty-message', '');
+                
+                // Set appropriate message
+                if (container === upcomingTasksContainer) emptyMsg.textContent = 'No tasks due today or tomorrow!';
+                else if (container === nextWeekTasksContainer) emptyMsg.textContent = 'Nothing due next week. Keep up the great work!';
+                else if (container === laterTasksContainer) emptyMsg.textContent = 'No long-term tasks pending. Time to relax!';
+
                 container.appendChild(emptyMsg);
             });
 
             const categorizedTasks = { upcoming: [], nextWeek: [], later: [] };
-            let hasUpcoming = false, hasNextWeek = false, hasLater = false;
             const oneDay = 1000 * 60 * 60 * 24;
             const sevenDaysAway = new Date(today.getTime() + 7 * oneDay);
 
@@ -358,30 +372,29 @@
 
                 if (dueDate.getTime() - today.getTime() <= 2 * oneDay) {
                     categorizedTasks.upcoming.push(task);
-                    hasUpcoming = true;
                 } else if (dueDate <= sevenDaysAway) {
                     categorizedTasks.nextWeek.push(task);
-                    hasNextWeek = true;
                 } else {
                     categorizedTasks.later.push(task);
-                    hasLater = true;
                 }
             });
 
-            renderTaskGroup(containers.upcoming, categorizedTasks.upcoming, hasUpcoming);
-            renderTaskGroup(containers.nextWeek, categorizedTasks.nextWeek, hasNextWeek);
-            renderTaskGroup(containers.later, categorizedTasks.later, hasLater);
+            renderTaskGroup(containers.upcoming, categorizedTasks.upcoming);
+            renderTaskGroup(containers.nextWeek, categorizedTasks.nextWeek);
+            renderTaskGroup(containers.later, categorizedTasks.later);
         }
 
         /**
          * Renders a group of tasks into a container.
          */
-        function renderTaskGroup(container, tasks, hasTasks) {
-            if (!hasTasks) {
-                container.querySelector('[data-empty-message]').classList.remove('hidden');
-                return;
+        function renderTaskGroup(container, tasks) {
+            // Remove the empty message placeholder if there are tasks
+            const emptyMsg = container.querySelector('[data-empty-message]');
+            if (tasks.length > 0) {
+                 if (emptyMsg) emptyMsg.remove();
             } else {
-                 container.querySelector('[data-empty-message]').remove();
+                if (emptyMsg) emptyMsg.classList.remove('hidden');
+                return;
             }
 
             tasks.forEach(task => {
@@ -426,7 +439,8 @@
                     </span>
                 </div>
                 <div class="text-sm text-gray-500 mb-3">
-                    <p class="font-medium text-blue-600">${task.type}</p>
+                    <p class="font-medium text-blue-600">${task.type} - ${task.subject}</p>
+                    ${task.teacher ? `<p>Teacher: <span class="font-semibold text-gray-700">${task.teacher}</span></p>` : ''}
                     <p>Due: <span class="font-semibold text-gray-700">${formatDueDate(task.dueDate)}</span></p>
                 </div>
                 <div class="flex justify-between items-center pt-2 border-t border-gray-100">
@@ -450,10 +464,15 @@
             const name = taskNameInput.value.trim();
             const dueDate = dueDateInput.value;
             const type = taskTypeSelect.value;
+            // Get new fields
+            const subject = taskSubjectInput.value.trim();
+            const teacher = taskTeacherInput.value.trim();
 
-            if (name && dueDate && type) {
-                const task = { name, dueDate, type };
+            if (name && dueDate && type && subject) {
+                const task = { name, dueDate, type, subject, teacher };
                 addTask(task);
+            } else {
+                 handleError({ message: 'Please fill in Task Name, Due Date, Type, and Subject.' }, 'Form Submission Validation');
             }
         });
 
@@ -507,4 +526,4 @@
 
     </script>
 </body>
-</html>
+</html>    
