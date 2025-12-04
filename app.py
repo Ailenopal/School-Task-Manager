@@ -83,6 +83,81 @@ def delete_task(task_id):
     st.session_state.tasks = [task for task in st.session_state.tasks if task['id'] != task_id]
     st.rerun() 
 
+# --- New Function to Display the Next Due Task ---
+def display_next_due_task_frame(tasks):
+    """Finds the next incomplete task and displays it in a prominent frame."""
+    
+    # 1. Filter for incomplete tasks
+    incomplete_tasks = [task for task in tasks if not task['isCompleted']]
+    
+    if not incomplete_tasks:
+        st.info("🎉 All caught up! No incomplete assignments found.")
+        return
+
+    # 2. Sort by due date (since the main sort handles completion status first, we can just sort these)
+    sorted_incomplete = sorted(incomplete_tasks, key=lambda x: x['dueDate'])
+    
+    # 3. Get the most pressing task
+    next_task = sorted_incomplete[0]
+    
+    # Calculate days left
+    days_left = (next_task['dueDate'] - datetime.now().date()).days
+    
+    if days_left < 0:
+        due_text = "OVERDUE"
+        bg_color = "#ef4444" # Red
+        icon = "🚨"
+    elif days_left == 0:
+        due_text = "DUE TODAY"
+        bg_color = "#f97316" # Orange
+        icon = "🔥"
+    else:
+        due_text = f"Due in {days_left} day{'s' if days_left > 1 else ''}"
+        bg_color = "#10b981" # Green
+        icon = "⏳"
+
+    # Use the custom label if available
+    custom_label = next_task.get('customDayLabel')
+    display_date = custom_label if custom_label else next_task['dueDate'].strftime("%A")
+    
+    st.markdown(f"## {icon} Next Priority Task")
+    
+    # Custom HTML for the "Frame" (Highlight Card)
+    st.markdown(f"""
+        <div style="
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 1rem;
+            border: 2px solid {bg_color};
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        ">
+            <div style="flex-grow: 1;">
+                <h3 style="color: #4f46e5; margin-top: 0; margin-bottom: 5px;">{next_task['subject']} Assignment</h3>
+                <p style="margin: 0; font-size: 1rem; color: #333;">{next_task['description']}</p>
+                <p style="margin: 5px 0 0 0; font-size: 0.85rem; color: #666;">Teacher: {next_task['teacher']}</p>
+            </div>
+            
+            <div style="
+                text-align: center;
+                background-color: {bg_color};
+                color: white;
+                padding: 10px 15px;
+                border-radius: 0.75rem;
+                font-weight: bold;
+                margin-left: 20px;
+                min-width: 150px;
+            ">
+                <div style="font-size: 1.5rem; margin-bottom: 5px;">{display_date}</div>
+                <div style="font-size: 0.9rem;">{due_text}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+
 # --- Main Application Function ---
 def main():
     # --- Custom CSS Styling (Light Mode Base) ---
@@ -119,7 +194,7 @@ def main():
             }
             
             /* Keep light background for inputs */
-            .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+            .stTextInput>div>div>input, .stTextArea>div>div>textarea, .stDateInput>label+div input {
                 background-color: #ffffff; /* White input background */
             }
             /* Ensure the form/header containers have the desired light background */
@@ -140,9 +215,13 @@ def main():
         </div>
         """, unsafe_allow_html=True
     )
+    
+    # --- NEW: Due Date Highlight Frame ---
+    # Call the new function here, after the main header
+    display_next_due_task_frame(st.session_state.tasks)
 
     # --- Add New Assignment Form ---
-    st.header("Add New Assignment")
+    st.header("➕ Add New Assignment")
     # Streamlit containers automatically use the styling defined for .stContainer
     with st.container(border=True):
         # We use a form with clear_on_submit=True to reset inputs after successful submission
@@ -189,7 +268,7 @@ def main():
 
 
     # --- Assignments Due List ---
-    st.header("Assignments Due")
+    st.header("📝 Assignments List")
     sorted_tasks = sort_tasks(st.session_state.tasks)
 
     if not sorted_tasks:
