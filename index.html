@@ -3,541 +3,508 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time School Task Manager</title>
+    <title>School Task Manager</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use Inter font family -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        /* Custom styles */
         body {
             font-family: 'Inter', sans-serif;
-            /* Unique Gradient Background */
-            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
-            background-attachment: fixed;
+            background-color: #f7f9fc;
         }
-
-        /* Glassmorphism Effect for Main Container */
-        .glassmorphic-card {
-            background-color: rgba(255, 255, 255, 0.2); /* Semi-transparent white background */
-            backdrop-filter: blur(15px); /* The key glass effect */
-            border: 1px solid rgba(255, 255, 255, 0.4); /* Light border */
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); /* Subtle, deep shadow */
+        .task-card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        .task-list-item {
-            transition: all 0.3s ease;
-            /* Lighter glass effect for items */
-            background-color: rgba(255, 255, 255, 0.5); 
-            backdrop-filter: blur(5px);
-            border-left: 5px solid transparent; /* Default border */
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
         }
-
-        .completed-task {
-            opacity: 0.6;
-            text-decoration: line-through;
-            border-left: 5px solid #6ee7b7; /* Subtle visual cue for complete */
+        .section-header {
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
-
-        /* Custom scrollbar for task list - adjusted for dark thumb */
-        #taskListContainer::-webkit-scrollbar {
-            width: 8px;
-        }
-        #taskListContainer::-webkit-scrollbar-thumb {
-            background-color: #a0aec0;
-            border-radius: 10px;
-        }
-
-        /* Editable fields style */
-        .editable-field {
-            cursor: pointer;
-            padding: 2px 4px; 
-            border-radius: 4px;
-            display: inline-block;
-            max-width: 100%;
-        }
-        .editable-field:hover {
-            background-color: rgba(255, 255, 255, 0.5);
+        .input-focus:focus {
+            ring: 2px;
+            ring-color: #3b82f6;
+            border-color: #3b82f6;
         }
     </style>
 </head>
-<body class="min-h-screen p-4 sm:p-8 flex justify-center items-start pt-10">
+<body class="min-h-screen p-4 sm:p-8">
 
-    <!-- Apply the Glassmorphic class -->
-    <div id="appContainer" class="w-full max-w-2xl glassmorphic-card rounded-3xl p-6 sm:p-8 lg:p-10">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-indigo-900 mb-2 tracking-tight drop-shadow-sm">
-            School Task Manager
-        </h1>
-        <p class="text-indigo-800 mb-6 border-b border-indigo-200 pb-4">
-            Manage your assignments and deadlines in real-time.
-        </p>
+    <div id="app" class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-blue-700">My Study Planner</h1>
+            <p class="text-lg text-gray-500 mt-2">Manage your school tasks and deadlines.</p>
+        </header>
 
-        <!-- User/Status Bar -->
-        <div class="mb-6 p-3 bg-white/50 rounded-lg shadow-inner flex items-center justify-between text-sm border border-white/50">
-            <span id="authStatus" class="text-indigo-700 font-semibold">Initializing...</span>
-            <span id="userIdDisplay" class="text-xs text-indigo-600 truncate max-w-[50%]"></span>
+        <!-- User Info / Status -->
+        <div class="mb-6 p-3 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+            <p class="text-sm font-medium text-gray-700">
+                Logged in as: <span id="user-id-display" class="font-mono text-xs bg-gray-100 p-1 rounded">Loading...</span>
+            </p>
         </div>
 
-        <!-- Task Input Form (Updated with Subject and Teacher) -->
-        <form id="taskForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-8 p-4 bg-white/50 rounded-xl shadow-lg border border-white/70">
-            <input type="text" id="taskSubject" placeholder="Subject (e.g., Chemistry)"
-                   class="col-span-1 sm:col-span-2 p-3 border-none bg-white/80 rounded-lg focus:ring-indigo-400 focus:border-indigo-400 text-gray-800 placeholder-gray-500 shadow-inner"
-                   required>
-
-            <input type="text" id="taskTeacher" placeholder="Teacher (Optional)"
-                   class="col-span-1 sm:col-span-2 p-3 border-none bg-white/80 rounded-lg focus:ring-indigo-400 focus:border-indigo-400 text-gray-800 placeholder-gray-500 shadow-inner">
-
-            <input type="text" id="taskTitle" placeholder="Assignment Title (e.g., Essay Draft)"
-                   class="col-span-1 sm:col-span-2 p-3 border-none bg-white/80 rounded-lg focus:ring-indigo-400 focus:border-indigo-400 text-gray-800 placeholder-gray-500 shadow-inner"
-                   required>
-
-            <input type="date" id="taskDueDate" title="Due Date"
-                   class="col-span-1 sm:col-span-2 p-3 border-none bg-white/80 rounded-lg focus:ring-indigo-400 focus:border-indigo-400 text-gray-800 shadow-inner"
-                   required>
-                   
-            <button type="submit"
-                    class="col-span-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-200 ease-in-out shadow-xl transform hover:scale-[1.01] active:scale-[0.99] focus:ring-4 focus:ring-indigo-300">
-                Add Task
-            </button>
-        </form>
-
-        <!-- Task List Container -->
-        <div id="taskListContainer" class="space-y-3 max-h-[60vh] overflow-y-auto">
-            <!-- Tasks will be injected here -->
-            <p id="loadingIndicator" class="text-center text-indigo-300">Loading tasks...</p>
+        <!-- Task Creation Form -->
+        <div class="bg-white p-6 rounded-xl task-card mb-10">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Add New Task</h2>
+            <form id="task-form" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-1">
+                    <label for="task-name" class="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
+                    <input type="text" id="task-name" required placeholder="e.g., Math Homework"
+                           class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none input-focus">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="due-date" class="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input type="date" id="due-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none input-focus">
+                </div>
+                <div class="md:col-span-1">
+                    <label for="task-type" class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select id="task-type" required class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none input-focus appearance-none">
+                        <option value="Homework">Homework</option>
+                        <option value="Project">Project</option>
+                        <option value="Exam/Test">Exam/Test</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="md:col-span-1 flex items-end">
+                    <button type="submit" id="add-task-btn"
+                            class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out disabled:bg-blue-300">
+                        Add Task
+                    </button>
+                </div>
+            </form>
         </div>
+
+        <!-- Task List Sections -->
+        <div id="loading-indicator" class="text-center text-gray-500 mt-10">Loading tasks...</div>
+        <div id="error-message" class="hidden p-4 bg-red-100 text-red-700 border border-red-300 rounded-lg mb-6"></div>
+
+        <!-- Today/Tomorrow -->
+        <section class="mb-8" id="section-upcoming">
+            <h2 class="text-2xl font-bold text-gray-800 section-header flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Upcoming (Today & Tomorrow)
+            </h2>
+            <div id="tasks-upcoming" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-gray-500 col-span-full" data-empty-message>No tasks due today or tomorrow!</p>
+            </div>
+        </section>
+
+        <!-- Next 7 Days -->
+        <section class="mb-8" id="section-next-week">
+            <h2 class="text-2xl font-bold text-gray-800 section-header flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Next 7 Days
+            </h2>
+            <div id="tasks-next-week" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-gray-500 col-span-full" data-empty-message>Nothing due next week. Keep up the great work!</p>
+            </div>
+        </section>
+
+        <!-- Later -->
+        <section class="mb-8" id="section-later">
+            <h2 class="text-2xl font-bold text-gray-800 section-header flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Later (Beyond 7 Days)
+            </h2>
+            <div id="tasks-later" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-gray-500 col-span-full" data-empty-message>No long-term tasks pending. Time to relax!</p>
+            </div>
+        </section>
 
     </div>
 
-    <!-- Firebase SDKs and Application Logic -->
+    <!-- Modal for Confirmation/Alert (Custom replacement for alert/confirm) -->
+    <div id="custom-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-sm w-full">
+            <h3 id="modal-title" class="text-xl font-semibold mb-4 text-gray-800">Confirm Deletion</h3>
+            <p id="modal-message" class="text-gray-600 mb-6">Are you sure you want to delete this task?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="modal-cancel-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition">
+                    Cancel
+                </button>
+                <button id="modal-confirm-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, addDoc, setDoc, deleteDoc, onSnapshot, collection, query, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Firebase and App State variables
-        let app, db, auth;
-        let userId = null;
-        let isAuthReady = false;
-
-        // Firestore paths using the provided global variables
+        // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
-        const taskForm = document.getElementById('taskForm');
-        const taskListContainer = document.getElementById('taskListContainer');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const authStatusElement = document.getElementById('authStatus');
-        const userIdDisplayElement = document.getElementById('userIdDisplay');
+        // Firestore & Auth initialization
+        let app, db, auth, userId = null;
+        let isAuthReady = false;
 
-        // --- Utility Functions ---
+        // DOM elements
+        const taskForm = document.getElementById('task-form');
+        const taskNameInput = document.getElementById('task-name');
+        const dueDateInput = document.getElementById('due-date');
+        const taskTypeSelect = document.getElementById('task-type');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const upcomingTasksContainer = document.getElementById('tasks-upcoming');
+        const nextWeekTasksContainer = document.getElementById('tasks-next-week');
+        const laterTasksContainer = document.getElementById('tasks-later');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const errorMessageDiv = document.getElementById('error-message');
+        const userIdDisplay = document.getElementById('user-id-display');
 
-        /**
-         * Generates the Firestore collection path for the current user's tasks.
-         * @returns {string} The full Firestore path.
-         */
-        function getTaskCollectionPath() {
-            if (!userId) {
-                console.error("Attempted to get collection path before userId was set.");
-                return null;
-            }
-            // Private data storage path: /artifacts/{appId}/users/{userId}/school-tasks
-            return `artifacts/${appId}/users/${userId}/school-tasks`;
+        // Modal elements
+        const customModal = document.getElementById('custom-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        const modalCancelBtn = document.getElementById('modal-cancel-btn');
+        
+        // Utility Functions
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        function getRelativeDate(dateStr) {
+            const date = new Date(dateStr);
+            date.setHours(0, 0, 0, 0);
+            const diffTime = date.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Tomorrow';
+            if (diffDays < 0) return 'Overdue';
+            if (diffDays <= 7) return `${diffDays} days away`;
+            return 'Later';
         }
 
-        // --- Firebase Initialization and Authentication ---
+        function formatDueDate(dateStr) {
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            return new Date(dateStr).toLocaleDateString('en-US', options);
+        }
 
-        async function initializeFirebase() {
-            if (!firebaseConfig) {
-                console.error("Firebase config is missing. Cannot initialize Firebase.");
-                authStatusElement.textContent = "Error: Config Missing";
-                return;
-            }
+        function handleError(error, context) {
+            console.error(`[${context}] Error:`, error);
+            errorMessageDiv.textContent = `An error occurred during ${context}: ${error.message || 'Unknown error'}. Please check the console for details.`;
+            errorMessageDiv.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+        }
 
-            try {
-                // Set debug logging for Firestore
-                setLogLevel('Debug');
+        // Firebase Initialization and Authentication
+        try {
+            // Set up logging for debugging Firestore/Auth issues
+            setLogLevel('debug');
 
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
 
-                authStatusElement.textContent = "Authenticating...";
-
-                // Sign in using custom token or anonymously
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                // Listen for Auth State Changes
-                onAuthStateChanged(auth, (user) => {
+            // 1. Handle Authentication
+            onAuthStateChanged(auth, async (user) => {
+                try {
                     if (user) {
                         userId = user.uid;
                         isAuthReady = true;
-                        authStatusElement.textContent = "Ready";
-                        userIdDisplayElement.textContent = `User ID: ${userId}`;
-                        console.log("Authentication successful. User ID:", userId);
-                        // Start listening to tasks once auth is confirmed
+                        userIdDisplay.textContent = userId;
+                        // Start listening to tasks only after successful authentication
                         setupRealtimeListener();
+                        addTaskBtn.disabled = false;
                     } else {
-                        userId = null;
-                        isAuthReady = true; // Still ready, but anonymous or signed out
-                        authStatusElement.textContent = "Signed Out/Anon";
-                        userIdDisplayElement.textContent = "";
-                        console.log("No user signed in.");
-                        // Clear tasks if signed out/anon and re-rendering is needed
-                        renderTasks([]);
+                        // Attempt sign-in if not authenticated
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
                     }
-                });
-
-            } catch (error) {
-                console.error("Error during Firebase initialization or authentication:", error);
-                authStatusElement.textContent = "Auth Error";
-            }
+                } catch (e) {
+                    handleError(e, 'Authentication/State Change');
+                }
+            });
+        } catch (e) {
+            handleError(e, 'Firebase Initialization');
         }
 
-        // --- CRUD Operations (Firestore) ---
+        // Firestore Operations
 
         /**
-         * Adds a new task document to Firestore, now including subject and teacher.
-         * @param {string} title - The title of the task.
-         * @param {string} dueDate - The due date string.
-         * @param {string} subject - The subject of the task.
-         * @param {string} teacher - The teacher name (optional).
+         * Gets the collection reference for the current user's private tasks.
+         * @returns {firebase.firestore.CollectionReference}
          */
-        async function addTask(title, dueDate, subject, teacher) {
-            if (!db || !userId) {
-                console.error("Database not ready or user not authenticated.");
-                return;
-            }
+        function getTasksCollectionRef() {
+            if (!userId) throw new Error("User ID is not set. Cannot access Firestore.");
+            // Private data path: /artifacts/{appId}/users/{userId}/tasks
+            return collection(db, 'artifacts', appId, 'users', userId, 'tasks');
+        }
 
+        /**
+         * Adds a new task to Firestore.
+         */
+        async function addTask(taskData) {
             try {
-                const docRef = await addDoc(collection(db, getTaskCollectionPath()), {
-                    title: title,
-                    dueDate: dueDate,
-                    subject: subject,
-                    teacher: teacher,
+                addTaskBtn.disabled = true;
+                const docRef = await addDoc(getTasksCollectionRef(), {
+                    ...taskData,
                     completed: false,
-                    createdAt: serverTimestamp() // Use server timestamp for creation time
+                    createdAt: serverTimestamp()
                 });
-                console.log("Document written with ID: ", docRef.id);
+                taskForm.reset();
+                addTaskBtn.disabled = false;
+                console.log("Task added with ID: ", docRef.id);
             } catch (e) {
-                console.error("Error adding document: ", e);
+                handleError(e, 'Adding Task');
+                addTaskBtn.disabled = false;
             }
         }
-        
-        /**
-         * Updates a specific field of a task document in Firestore.
-         * @param {string} taskId - The ID of the document to update.
-         * @param {string} fieldName - The name of the field to update (e.g., 'title', 'subject').
-         * @param {string} newValue - The new value for the field.
-         */
-        async function updateTaskField(taskId, fieldName, newValue) {
-            if (!db || !userId) return;
-
-            const trimmedValue = newValue.trim();
-            
-            // Only enforce non-empty for mandatory fields (title, subject, due date is handled by form)
-            if (trimmedValue === '' && (fieldName === 'title' || fieldName === 'subject')) {
-                 console.warn(`Attempted to save empty value for mandatory field: ${fieldName}`);
-                 return; 
-            }
-            
-            // Construct update object
-            const updateData = {};
-            updateData[fieldName] = trimmedValue;
-
-            try {
-                const taskRef = doc(db, getTaskCollectionPath(), taskId);
-                await updateDoc(taskRef, updateData);
-                console.log(`Task ${fieldName} updated for ID:`, taskId);
-            } catch (e) {
-                console.error(`Error updating document ${fieldName}: `, e);
-            }
-        }
-
 
         /**
          * Toggles the completion status of a task.
-         * @param {string} taskId - The ID of the document to update.
-         * @param {boolean} currentStatus - The current completion status.
          */
-        async function toggleTaskCompletion(taskId, currentStatus) {
-            if (!db || !userId) return;
-
+        async function toggleTask(taskId, completed) {
             try {
-                const taskRef = doc(db, getTaskCollectionPath(), taskId);
-                await updateDoc(taskRef, {
-                    completed: !currentStatus
-                });
-                console.log("Task completion toggled for ID:", taskId);
+                const docRef = doc(getTasksCollectionRef(), taskId);
+                await updateDoc(docRef, { completed: !completed });
             } catch (e) {
-                console.error("Error toggling document status: ", e);
+                handleError(e, 'Toggling Task Status');
             }
         }
 
         /**
-         * Deletes a task document from Firestore.
-         * @param {string} taskId - The ID of the document to delete.
+         * Deletes a task from Firestore.
          */
         async function deleteTask(taskId) {
-            if (!db || !userId) return;
-
             try {
-                const taskRef = doc(db, getTaskCollectionPath(), taskId);
-                await deleteDoc(taskRef);
-                console.log("Task deleted with ID:", taskId);
+                const docRef = doc(getTasksCollectionRef(), taskId);
+                await deleteDoc(docRef);
+                console.log(`Task ${taskId} deleted.`);
             } catch (e) {
-                console.error("Error deleting document: ", e);
+                handleError(e, 'Deleting Task');
             }
         }
 
-        // --- Real-time Listener and Rendering ---
-
         /**
-         * Sets up the real-time listener for the task collection.
+         * Sets up the real-time listener for tasks.
          */
         function setupRealtimeListener() {
-            if (!db || !userId) return;
+            if (!isAuthReady || !db) return;
 
-            const tasksCollectionRef = collection(db, getTaskCollectionPath());
-            // Query: Get all tasks
-            const q = query(tasksCollectionRef);
+            const tasksQuery = query(getTasksCollectionRef());
 
-            loadingIndicator.style.display = 'block';
-
-            // onSnapshot sets up the real-time listener
-            onSnapshot(q, (querySnapshot) => {
-                const tasks = [];
-                querySnapshot.forEach((doc) => {
-                    tasks.push({ id: doc.id, ...doc.data() });
-                });
-                // Sort locally: Incomplete tasks first, then by due date, then by creation date.
+            onSnapshot(tasksQuery, (snapshot) => {
+                loadingIndicator.classList.add('hidden');
+                errorMessageDiv.classList.add('hidden');
+                const tasks = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                // Sort by due date ascending, and completed last
                 tasks.sort((a, b) => {
-                    // 1. Sort by completion status (incomplete first)
                     if (a.completed !== b.completed) {
-                        return a.completed ? 1 : -1;
+                        return a.completed ? 1 : -1; // Completed go to the end
                     }
-                    // 2. Sort by due date (earlier dates first)
-                    if (a.dueDate && b.dueDate) {
-                        return new Date(a.dueDate) - new Date(b.dueDate);
-                    }
-                    // 3. Fallback to creation time
-                    return (a.createdAt?.toMillis() || 0) - (b.createdAt?.toMillis() || 0);
+                    return new Date(a.dueDate) - new Date(b.dueDate);
                 });
-
                 renderTasks(tasks);
-                loadingIndicator.style.display = 'none';
             }, (error) => {
-                console.error("Error listening to collection:", error);
-                taskListContainer.innerHTML = '<p class="text-red-500 text-center">Error loading tasks. Check console for details.</p>';
-                loadingIndicator.style.display = 'none';
+                handleError(error, 'Realtime Listener');
             });
         }
 
+        // Rendering Functions
+
         /**
-         * Renders the list of tasks to the DOM.
-         * @param {Array<Object>} tasks - The array of task objects from Firestore.
+         * Renders all tasks into their respective containers.
+         * @param {Array<Object>} tasks - List of task objects from Firestore.
          */
         function renderTasks(tasks) {
-            taskListContainer.innerHTML = '';
+            const containers = {
+                upcoming: upcomingTasksContainer,
+                nextWeek: nextWeekTasksContainer,
+                later: laterTasksContainer,
+            };
 
-            if (tasks.length === 0) {
-                taskListContainer.innerHTML = `
-                    <div class="p-6 text-center rounded-lg border border-indigo-200 bg-white/50">
-                        <p class="text-indigo-600 font-medium">No tasks yet! Add your first assignment above.</p>
-                    </div>
-                `;
+            // Clear containers and reset empty messages
+            Object.values(containers).forEach(container => {
+                container.innerHTML = '';
+                // Add back empty message placeholder
+                const emptyMsg = document.createElement('p');
+                emptyMsg.className = 'text-gray-500 col-span-full hidden';
+                emptyMsg.setAttribute('data-empty-message', '');
+                container.appendChild(emptyMsg);
+            });
+
+            const categorizedTasks = { upcoming: [], nextWeek: [], later: [] };
+            let hasUpcoming = false, hasNextWeek = false, hasLater = false;
+            const oneDay = 1000 * 60 * 60 * 24;
+            const sevenDaysAway = new Date(today.getTime() + 7 * oneDay);
+
+            tasks.forEach(task => {
+                const dueDate = new Date(task.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+
+                if (dueDate.getTime() - today.getTime() <= 2 * oneDay) {
+                    categorizedTasks.upcoming.push(task);
+                    hasUpcoming = true;
+                } else if (dueDate <= sevenDaysAway) {
+                    categorizedTasks.nextWeek.push(task);
+                    hasNextWeek = true;
+                } else {
+                    categorizedTasks.later.push(task);
+                    hasLater = true;
+                }
+            });
+
+            renderTaskGroup(containers.upcoming, categorizedTasks.upcoming, hasUpcoming);
+            renderTaskGroup(containers.nextWeek, categorizedTasks.nextWeek, hasNextWeek);
+            renderTaskGroup(containers.later, categorizedTasks.later, hasLater);
+        }
+
+        /**
+         * Renders a group of tasks into a container.
+         */
+        function renderTaskGroup(container, tasks, hasTasks) {
+            if (!hasTasks) {
+                container.querySelector('[data-empty-message]').classList.remove('hidden');
                 return;
+            } else {
+                 container.querySelector('[data-empty-message]').remove();
             }
 
             tasks.forEach(task => {
-                const isCompleted = task.completed;
-                const taskItem = document.createElement('div');
-                
-                // Apply unique styling class
-                taskItem.className = `task-list-item flex items-center p-4 rounded-lg shadow-md border border-white/50 ${isCompleted ? 'completed-task' : 'hover:bg-white/70'}`;
-                taskItem.dataset.id = task.id;
-
-                // Format Due Date
-                const formattedDate = new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                
-                // Set default/fallback values for new fields
-                const subjectText = task.subject ? `Subject: ${task.subject}` : 'Subject: N/A';
-                const teacherText = task.teacher ? `Teacher: ${task.teacher}` : 'Teacher: N/A';
-
-
-                taskItem.innerHTML = `
-                    <!-- Checkbox -->
-                    <input type="checkbox" ${isCompleted ? 'checked' : ''} data-id="${task.id}"
-                           class="task-toggle w-5 h-5 text-green-500 bg-white border-white rounded focus:ring-green-400 mr-4 cursor-pointer shadow-inner">
-
-                    <!-- Task Details (Updated structure) -->
-                    <div class="flex-grow min-w-0">
-                        <!-- Subject Field - Editable -->
-                        <p class="editable-field text-sm font-medium text-indigo-700" 
-                           data-id="${task.id}" data-field="subject" data-current-value="${task.subject || ''}">
-                            ${subjectText}
-                        </p>
-                        <!-- Title Field - Editable -->
-                        <p class="editable-field text-base font-semibold text-indigo-900 truncate" 
-                           data-id="${task.id}" data-field="title" data-current-value="${task.title || ''}">
-                            ${task.title}
-                        </p>
-                        <!-- Teacher Field - Editable -->
-                        <p class="editable-field text-xs text-indigo-600 mt-0.5" 
-                           data-id="${task.id}" data-field="teacher" data-current-value="${task.teacher || ''}">
-                            ${teacherText}
-                        </p>
-                        <!-- Due Date - Not Editable Inline -->
-                        <p class="text-xs text-indigo-600 mt-0.5 font-medium">
-                            Due: ${formattedDate || 'No Date'}
-                        </p>
-                    </div>
-
-                    <!-- Delete Button -->
-                    <button class="task-delete ml-4 p-2 text-red-500 hover:text-red-700 rounded-full hover:bg-white/80 transition duration-150 ease-in-out" data-id="${task.id}" aria-label="Delete Task">
-                        <!-- Icon: Trash -->
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                `;
-                
-                taskListContainer.appendChild(taskItem);
+                const card = createTaskCard(task);
+                container.appendChild(card);
             });
         }
-        
+
         /**
-         * Handles the click on an editable field to enable inline editing.
+         * Creates the HTML element for a single task card.
+         * @param {Object} task - The task object.
+         * @returns {HTMLElement} The task card element.
          */
-        function handleFieldEdit(element) {
-            const taskId = element.dataset.id;
-            const fieldName = element.dataset.field;
-            // Use the current value from the data attribute, not innerHTML which includes 'Title: '
-            const currentText = element.dataset.currentValue; 
-            
-            // Determine input type (assuming all are text fields for now, date is done separately)
-            const inputType = 'text';
+        function createTaskCard(task) {
+            const card = document.createElement('div');
+            const relativeDate = getRelativeDate(task.dueDate);
+            const isOverdue = relativeDate === 'Overdue';
+            const isCompleted = task.completed;
 
-            // Create the input field
-            const input = document.createElement('input');
-            input.type = inputType;
-            input.value = currentText;
-            input.className = 'w-full p-1 bg-white/90 rounded-md border border-indigo-400 focus:ring-indigo-500 text-base font-semibold text-indigo-900 shadow-inner';
-            
-            // Apply field-specific style classes for visual consistency
-            if (fieldName === 'subject') {
-                input.className = input.className.replace('text-base font-semibold', 'text-sm font-medium');
-            } else if (fieldName === 'teacher') {
-                input.className = input.className.replace('text-base font-semibold', 'text-xs');
+            // Determine border color based on category/status
+            let borderColor = 'border-blue-500';
+            if (isOverdue && !isCompleted) {
+                borderColor = 'border-red-500';
+            } else if (relativeDate === 'Today' || relativeDate === 'Tomorrow') {
+                borderColor = 'border-red-400';
+            } else if (relativeDate !== 'Later' && !isCompleted) {
+                borderColor = 'border-yellow-500';
+            } else if (isCompleted) {
+                borderColor = 'border-green-500 opacity-60';
             }
-            
-            // Replace the <p> element with the <input> element
-            element.replaceWith(input);
-            input.focus();
-            
-            // Function to save and revert back to text
-            const saveChanges = () => {
-                const newValue = input.value;
-                if (newValue.trim() !== currentText) {
-                    updateTaskField(taskId, fieldName, newValue);
-                }
-                
-                // Re-create the <p> element with the old/new value.
-                // onSnapshot will handle the full re-render if the value actually changed.
-                const newFieldElement = document.createElement('p');
-                // Replicate original classes and data attributes
-                newFieldElement.className = element.className;
-                newFieldElement.dataset.id = taskId;
-                newFieldElement.dataset.field = fieldName;
-                newFieldElement.dataset.currentValue = newValue;
 
-                // Re-set text content based on field type
-                if (fieldName === 'title') {
-                    newFieldElement.textContent = newValue || 'No Title';
-                } else if (fieldName === 'subject') {
-                    newFieldElement.textContent = `Subject: ${newValue || 'N/A'}`;
-                } else if (fieldName === 'teacher') {
-                    newFieldElement.textContent = `Teacher: ${newValue || 'N/A'}`;
-                }
+            card.className = `task-card bg-white p-4 rounded-xl border-l-4 ${borderColor} ${isCompleted ? 'line-through' : ''}`;
+            
+            const relativeDateClass = isOverdue && !isCompleted ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700';
+            const statusText = isCompleted ? 'Completed' : (isOverdue ? 'OVERDUE' : relativeDate);
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="text-lg font-semibold text-gray-900">${task.name}</h3>
+                    <span class="text-xs font-medium py-1 px-2 rounded-full ${relativeDateClass}">
+                        ${statusText}
+                    </span>
+                </div>
+                <div class="text-sm text-gray-500 mb-3">
+                    <p class="font-medium text-blue-600">${task.type}</p>
+                    <p>Due: <span class="font-semibold text-gray-700">${formatDueDate(task.dueDate)}</span></p>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                    <button data-id="${task.id}" data-completed="${isCompleted}"
+                        class="toggle-btn text-sm font-medium ${isCompleted ? 'text-gray-500 hover:text-green-600' : 'text-green-600 hover:text-green-700'} transition duration-150">
+                        ${isCompleted ? 'Undo' : 'Complete'}
+                    </button>
+                    <button data-id="${task.id}"
+                        class="delete-btn text-sm font-medium text-red-500 hover:text-red-700 transition duration-150">
+                        Delete
+                    </button>
+                </div>
+            `;
+            return card;
+        }
 
-                input.replaceWith(newFieldElement);
+        // Event Listeners
+
+        taskForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = taskNameInput.value.trim();
+            const dueDate = dueDateInput.value;
+            const type = taskTypeSelect.value;
+
+            if (name && dueDate && type) {
+                const task = { name, dueDate, type };
+                addTask(task);
+            }
+        });
+
+        // Delegate click events for toggle and delete buttons
+        document.getElementById('app').addEventListener('click', function(e) {
+            const target = e.target;
+            const taskId = target.getAttribute('data-id');
+
+            if (target.classList.contains('toggle-btn') && taskId) {
+                const isCompleted = target.getAttribute('data-completed') === 'true';
+                toggleTask(taskId, isCompleted);
+            }
+
+            if (target.classList.contains('delete-btn') && taskId) {
+                showModal('Confirm Deletion', `Are you sure you want to delete the task: "${target.closest('.task-card').querySelector('h3').textContent}"?`, taskId);
+            }
+        });
+
+        // Modal Logic (Custom replacement for window.confirm)
+        function showModal(title, message, taskId) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+            customModal.classList.add('flex');
+
+            // Clear previous listeners to prevent multiple execution
+            modalConfirmBtn.onclick = null;
+            modalCancelBtn.onclick = null;
+
+            modalConfirmBtn.onclick = () => {
+                deleteTask(taskId);
+                hideModal();
             };
 
-            // Save on blur (click away)
-            input.addEventListener('blur', saveChanges);
-
-            // Save on Enter key press
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault(); // Prevent form submission
-                    input.blur(); // Trigger blur event to save changes
-                }
-            });
+            modalCancelBtn.onclick = () => {
+                hideModal();
+            };
         }
 
+        function hideModal() {
+            customModal.classList.add('hidden');
+            customModal.classList.remove('flex');
+        }
 
-        // --- Event Delegation for Dynamic Elements ---
-        taskListContainer.addEventListener('click', (e) => {
-            const target = e.target;
-            
-            // Checkbox Toggle
-            if (target.classList.contains('task-toggle')) {
-                const taskId = target.dataset.id;
-                // Since event is on 'change', checked is the new status. We pass the *old* status to toggle.
-                toggleTaskCompletion(taskId, !target.checked); 
-            } 
-            
-            // Delete Button
-            else if (target.closest('.task-delete')) {
-                const deleteButton = target.closest('.task-delete');
-                deleteTask(deleteButton.dataset.id);
-            }
-            
-            // Inline Field Edit (Click on the <p> tag with class 'editable-field')
-            else if (target.classList.contains('editable-field')) {
-                // Find the parent item to check if it's completed
-                const taskItem = target.closest('.task-list-item');
-                if (taskItem && !taskItem.classList.contains('completed-task')) {
-                    handleFieldEdit(target);
-                }
-            }
-        });
+        // Set today's date as min value for due date input
+        window.onload = function() {
+            const todayISO = new Date().toISOString().split('T')[0];
+            dueDateInput.min = todayISO;
+            dueDateInput.value = todayISO; // Set a default value to today
+        };
 
-
-        // --- Event Handlers ---
-
-        /**
-         * Handles the form submission for adding a new task.
-         */
-        taskForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const titleInput = document.getElementById('taskTitle');
-            const dueDateInput = document.getElementById('taskDueDate');
-            const subjectInput = document.getElementById('taskSubject');
-            const teacherInput = document.getElementById('taskTeacher'); // Optional
-
-            const title = titleInput.value.trim();
-            const dueDate = dueDateInput.value; // YYYY-MM-DD format
-            const subject = subjectInput.value.trim();
-            const teacher = teacherInput.value.trim();
-
-            if (title && dueDate && subject) {
-                addTask(title, dueDate, subject, teacher);
-                
-                // Clear the main text inputs
-                titleInput.value = ''; 
-                subjectInput.value = '';
-                
-                // Keep the date and teacher name for quick subsequent entries
-                titleInput.focus();
-            }
-        });
-
-        // --- Start Application ---
-        document.addEventListener('DOMContentLoaded', initializeFirebase);
     </script>
 </body>
 </html>
