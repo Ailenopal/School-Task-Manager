@@ -19,7 +19,8 @@ if 'tasks' not in st.session_state:
         'teacher': 'Mr. Smith',
         'description': 'Solve problem set 3 on thermodynamics.',
         'dueDate': datetime.now().date() + timedelta(days=5),
-        'isCompleted': False
+        'isCompleted': False,
+        'customDayLabel': 'Next Fri' # Added custom label for consistency
     })
     st.session_state.tasks.append({
         'id': 2,
@@ -27,7 +28,8 @@ if 'tasks' not in st.session_state:
         'teacher': 'Ms. Jane',
         'description': 'Read "The Great Gatsby" chapters 1-3.',
         'dueDate': datetime.now().date() + timedelta(days=2),
-        'isCompleted': True
+        'isCompleted': True,
+        'customDayLabel': None # Optional label
     })
 
 # --- Helper Functions (defined globally) ---
@@ -43,7 +45,7 @@ def sort_tasks(tasks):
     # Sorting key is a tuple: (completion status, due date)
     return sorted(tasks, key=lambda x: (x['isCompleted'], x['dueDate']))
 
-def add_task(subject, teacher, due_date_str, description):
+def add_task(subject, teacher, due_date_str, description, day_label):
     """Adds a new task to the session state."""
     try:
         # Convert YYYY-MM-DD string to Python date object
@@ -61,7 +63,8 @@ def add_task(subject, teacher, due_date_str, description):
         'teacher': teacher,
         'description': description,
         'dueDate': due_date_obj,
-        'isCompleted': False
+        'isCompleted': False,
+        'customDayLabel': day_label if day_label else None # Store the custom label
     })
     st.success("Task added successfully!")
     st.rerun() # Trigger rerun to clear the form and update the list
@@ -131,7 +134,7 @@ def main():
             subject = col1.text_input("Subject (e.g., Math, History)", key='subject_input')
             teacher = col2.text_input("Teacher's Name", key='teacher_input')
 
-            # Row 2: Due Date, Day of Week (Display only)
+            # Row 2: Due Date, Day of Week (Editable custom label)
             col3, col4 = st.columns(2)
             
             # Due Date input
@@ -143,9 +146,10 @@ def main():
                 value=default_date
             )
             
-            # Display calculated Day of Week (Readonly simulation)
-            day_of_week = get_day_of_week(due_date)
-            col4.text_input("Day (Auto-calculated)", value=day_of_week, disabled=True)
+            # Allow user to choose/input a custom day label, defaulting to the calculated day name
+            calculated_day = get_day_of_week(due_date)
+            # Changed label and removed disabled=True to allow user input
+            day_label = col4.text_input("Day Label (e.g., 'Today', 'EOD', 'Weekend')", value=calculated_day, key='day_label_input')
 
             # Row 3: Description
             description = st.text_area("Task Description", key='description_input', height=100)
@@ -159,7 +163,8 @@ def main():
             if submit_button:
                 # Streamlit forms capture all inputs at once on submit
                 if subject and teacher and due_date and description:
-                    add_task(subject, teacher, due_date.strftime('%Y-%m-%d'), description)
+                    # Pass the new day_label to the add_task function
+                    add_task(subject, teacher, due_date.strftime('%Y-%m-%d'), description, day_label)
                 else:
                     st.error("Please fill in all required fields.")
 
@@ -175,8 +180,13 @@ def main():
         for task in sorted_tasks:
             card_class = "task-card-complete" if task['isCompleted'] else "task-card-incomplete"
             
+            # Calculate date components
             due_day = get_day_of_week(task['dueDate'])
             formatted_date = task['dueDate'].strftime("%b %d, %Y")
+            
+            # Use custom label if available, otherwise use calculated day
+            custom_label = task.get('customDayLabel')
+            display_text = f"{custom_label}, {formatted_date}" if custom_label else f"{due_day}, {formatted_date}"
             
             # Conditional text styling using inline HTML/CSS
             subject_style = 'color: #9ca3af; text-decoration: line-through;' if task['isCompleted'] else 'font-weight: bold; color: #1f2937; font-size: 1.125rem;'
@@ -207,11 +217,11 @@ def main():
                         <p style="{desc_style} margin-top: 5px; font-size: 0.875rem;">{task['description']}</p>
                     """, unsafe_allow_html=True)
 
-                # 3. Due Date Badge
+                # 3. Due Date Badge - Now uses display_text which includes the custom label
                 with cols[2]:
                     st.markdown(f"""
                         <div style="background-color: {date_badge_bg}; color: white; padding: 5px 10px; border-radius: 1rem; text-align: center; font-size: 0.75rem; font-weight: 600; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); white-space: nowrap;">
-                            {due_day}, {formatted_date}
+                            {display_text}
                         </div>
                     """, unsafe_allow_html=True)
                 
