@@ -85,45 +85,62 @@ def delete_task(task_id):
 
 # --- Main Application Function ---
 def main():
-    # --- Custom CSS Styling ---
+    # --- Custom CSS Styling (Dark Mode) ---
     st.markdown("""
         <style>
+            /* Set a dark background color for the entire page */
+            body {
+                background-color: #1f2937; /* Slate 800 */
+            }
+            /* Ensure the main Streamlit container also adopts the dark background */
+            .stApp {
+                background-color: #1f2937;
+            }
+            
             .stButton>button {
                 width: 100%;
-                background-color: #4f46e5;
+                background-color: #6366f1; /* Indigo 500 */
                 color: white;
                 font-weight: bold;
                 border-radius: 0.5rem;
             }
             .stButton>button:hover {
-                background-color: #4338ca;
+                background-color: #4f46e5; /* Indigo 600 */
             }
-            /* Custom styling for the task list container */
+            /* Custom styling for the task list container (Incomplete: Slate 700, Complete: Slate 600) */
             .task-card-incomplete {
-                border-left: 5px solid #4f46e5;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-                background-color: #ffffff;
+                border-left: 5px solid #6366f1; /* Lighter Purple Border */
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+                background-color: #374151; /* Slate 700 */
             }
             .task-card-complete {
-                border-left: 5px solid #10b981;
-                opacity: 0.6;
-                background-color: #f3f4f6;
+                border-left: 5px solid #34d399; /* Lighter Green Border */
+                opacity: 0.7;
+                background-color: #4b5563; /* Slate 600 */
+            }
+            
+            /* Change input field colors for better dark mode visibility */
+            /* Streamlit handles some internal component colors, but setting text explicitly here */
+            .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+                color: #f3f4f6; /* Very light gray text */
+                background-color: #4b5563; /* Slate 600 background */
             }
         </style>
     """, unsafe_allow_html=True)
 
 
-    # --- Header ---
+    # --- Header (Updated for Dark Mode) ---
     st.markdown(
         """
-        <div style="text-align: center; padding: 20px; background-color: white; border-radius: 1rem; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);">
-            <h1 style="font-size: 2.5rem; font-weight: 800; color: #1f2937;">📚 School Task Manager</h1>
-            <p style="color: #6b7280; font-size: 0.875rem;">Tasks are saved for the current browser session only.</p>
+        <div style="text-align: center; padding: 20px; background-color: #374151; border-radius: 1rem; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);">
+            <h1 style="font-size: 2.5rem; font-weight: 800; color: #f9fafb;">📚 School Task Manager</h1>
+            <p style="color: #9ca3af; font-size: 0.875rem;">Tasks are saved for the current browser session only.</p>
         </div>
         """, unsafe_allow_html=True
     )
 
     # --- Add New Assignment Form ---
+    # Streamlit headers use the default theme color, but we ensure the input area container is styled correctly
     st.header("Add New Assignment")
     with st.container(border=True):
         # We use a form with clear_on_submit=True to reset inputs after successful submission
@@ -188,10 +205,16 @@ def main():
             custom_label = task.get('customDayLabel')
             display_text = f"{custom_label}, {formatted_date}" if custom_label else f"{due_day}, {formatted_date}"
             
-            # Conditional text styling using inline HTML/CSS
-            subject_style = 'color: #9ca3af; text-decoration: line-through;' if task['isCompleted'] else 'font-weight: bold; color: #1f2937; font-size: 1.125rem;'
-            desc_style = 'color: #9ca3af; text-decoration: line-through;' if task['isCompleted'] else 'color: #4b5563;'
-            date_badge_bg = '#10b981' if task['isCompleted'] else '#4f46e5'
+            # Conditional text styling using inline HTML/CSS (Updated for Dark Mode)
+            
+            # Incomplete: White main text, Light gray secondary text
+            # Complete: Medium light gray text (faded)
+            subject_style = 'color: #9ca3af; text-decoration: line-through;' if task['isCompleted'] else 'font-weight: bold; color: #f9fafb; font-size: 1.125rem;'
+            desc_style = 'color: #9ca3af; text-decoration: line-through;' if task['isCompleted'] else 'color: #d1d5db;'
+            teacher_color = '#9ca3af' if task['isCompleted'] else '#a0aec0' # Light gray for teacher name
+
+            # Badge color remains the same (Indigo/Green)
+            date_badge_bg = '#34d399' if task['isCompleted'] else '#6366f1'
 
             # Use st.container to create the card layout
             with st.container(border=True):
@@ -210,17 +233,17 @@ def main():
                     args=(task['id'],) # Pass the task ID to the callback
                 )
 
-                # 2. Subject, Teacher, Description
+                # 2. Subject, Teacher, Description (Using updated styles)
                 with cols[1]:
                     st.markdown(f"""
-                        <p style="{subject_style} margin: 0;">{task['subject']} <span style="font-weight: normal; color: #6b7280; font-size: 0.875rem;">/ {task['teacher']}</span></p>
+                        <p style="{subject_style} margin: 0;">{task['subject']} <span style="font-weight: normal; color: {teacher_color}; font-size: 0.875rem;">/ {task['teacher']}</span></p>
                         <p style="{desc_style} margin-top: 5px; font-size: 0.875rem;">{task['description']}</p>
                     """, unsafe_allow_html=True)
 
-                # 3. Due Date Badge - Now uses display_text which includes the custom label
+                # 3. Due Date Badge
                 with cols[2]:
                     st.markdown(f"""
-                        <div style="background-color: {date_badge_bg}; color: white; padding: 5px 10px; border-radius: 1rem; text-align: center; font-size: 0.75rem; font-weight: 600; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); white-space: nowrap;">
+                        <div style="background-color: {date_badge_bg}; color: white; padding: 5px 10px; border-radius: 1rem; text-align: center; font-size: 0.75rem; font-weight: 600; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15); white-space: nowrap;">
                             {display_text}
                         </div>
                     """, unsafe_allow_html=True)
